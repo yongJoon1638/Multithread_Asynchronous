@@ -1,9 +1,9 @@
-﻿#include <future>
+﻿#include "ThreadPool.h"
 #include <iostream>
 #include <fstream>
-#include <thread>
 #include <vector>
 #include <list>
+#include <iterator>
 #include <string>
 #include <io.h>
 
@@ -25,7 +25,7 @@ public:
 };
 
 list<textfile*> txtlist;
-vector<string> fileVector;
+vector<char*> fileVector;
 
 //get all .txt files in directory
 //store at fileVector
@@ -61,26 +61,24 @@ void loadTxt(const char* fileName) {
     in.close();
 }
 
-int do_work(int x) {
-    x++;
-    std::this_thread::sleep_for(std::chrono::seconds(3));
-    return x;
+
+int main() { 
+    int count = 0;
+    ThreadPool pool(7);
+    get_files_inDirectory("directory", ".txt");
+
+    while (!fileVector.empty()) {
+        pool.EnqueueJobs([]() {loadTxt(fileVector.back()); });
+    }
+
+    list<textfile*> ::iterator it;
+    while (it != txtlist.end()) {
+        textfile* tmp = *it;
+        tmp = new textfile();
+        cout << "Title : " << tmp->title << " ON" << endl;
+        count++;
+    }
+
+    cout << "Total " << count << "was loaded" << endl;
+    return 0;
 }
-
-void do_work_parallel() {
-    int xy = 3;
-    auto f1 = std::async([]() { do_work(xy); });
-    auto f2 = std::async([]() { do_work(xy); });
-    do_work(xy);
-
-    f1.get();
-    f2.get();
-}
-
-void do_work_sequential() {
-    do_work(3);
-    do_work(3);
-    do_work(3);
-}
-
-int main() { do_work_sequential(); }
